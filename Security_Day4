@@ -1,0 +1,88 @@
+Reverse engineering
+
+
+Assembly_Demo////////////////////////////////////////////
+
+nano Assemby_Demo
+
+1st part ----------------
+
+main:
+   mov rax, 16                     1//1)move into rax the value of 16     
+   push rax                        2//push value of rax (16) onto the stack. stack grows by 8 bytes.
+   jmp mem2                        3//jump to memory location of mem2
+mem1:
+   mov rax, 0                      7//move into rax the value of 0 (status code?)
+   ret                             8//return value of rax (first return register)(0)
+mem2:
+   pop r8                          4//pop value from top of the stack (16) into r8. r8 is 16. stack shrinks by 8 bytes.
+   cmp rax, r8                     5//compare to the value of rax (16) the value of r8 (16). r8 is subtracted from rax. zero flag set.
+   je mem1                         6//zero flag set from previous operation; values are equal. jump to mem location of mem1
+   
+   
+   
+   
+   
+2nd part --------------------
+
+main:
+   mov rcx, 25                      1//move into rcx the value of 25
+   mov rbx, 62                      2//move into rbx the value of 62
+   jmp mem1                         3//jump to mem location of mem1
+
+mem1:
+   sub rbx, 40                      4//subtract from rbx(62) the value of 40. rbx is now 22
+   mov rsi, rbx                     5//move into rsi the value of rbx(22)
+   cmp rcx, rsi                     6//compmare to rcx(25) the value of rsi(22). rsi is subtracted from rcx. flags is set.
+   jle mem2                         7//flag is set. jump to memory location of mem2
+mem2:
+   mov rax, 0                       8//move into rax the value of 0
+   ret                              9//returning the value of the first return register (rax(0))
+   
+   
+   
+Powershell and Ghidra demo///////////////////////////////////////////////////////////////////////////////
+
+*Stack is FILO (First In Last Out)
+Commmand History
+1 cd \Downloads
+   2 cd \Downloads\
+   3 cd downloads
+   4 .\SysinternalsSuite\strings.exe .\demo_new.exe
+   5 .\SysinternalsSuite\strings.exe .\demo1_new.exe
+   6 clear
+   7 Get-Content .\demo1_new.exe | select -First 1
+   8 .\demo1_new.exe
+   9 .\deemo1_new.exe
+  10 .\demo1_new.exe
+  11 .\SysinternalsSuite\strings.exe .\demo2_new.exe
+  12 Get-Content .\demo2_new.exe | select -First 1
+  13 ./demo2_new.exe
+  14 ./demo2_new.exe
+  15 ./demo2_patched.exe
+Opened Ghidra and powershell
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+CTFs
+
+1st Terminal
+  ssh -MS /tmp/jump student@10.50.29.89  (connection to jump box)
+  2nd Terminal
+  ssh -S /tmp/jump jim
+  3rd Terminal
+  ssh -S /tmp/jump jim -O forward -D9050
+  4th Terminal
+  ssh -S /tmp/jump jim -O forward -L 1222:192.168.28.111:80 -L 4333:127.0.0.1:2222
+  proxychains wget -r http://192.168.28.111:80/longTermStorage
+  
+  Open a connection to the Win-OPS
+  ssh 
+  scp student@192.168.65.20:/home/student/192.168.28.111/longTermStorage/entry.exe .
+  scp student@192.168.65.20:/home/student/192.168.28.111/longTermStorage/entry.c .
+  scp student@192.168.65.20:/home/student/192.168.28.111/longTermStorage/basic1.exe .
+  scp student@192.168.65.20:/home/student/192.168.28.111/longTermStorage/sdst.exe .
+  scp student@192.168.65.20:/home/student/192.168.28.111/longTermStorage/sdst2.exe .
+  scp student@192.168.65.20:/home/student/192.168.28.111/longTermStorage/sdst3.exe .
+  scp student@192.168.65.20:/home/student/192.168.28.111/longTermStorage/patching.exe .
+  
