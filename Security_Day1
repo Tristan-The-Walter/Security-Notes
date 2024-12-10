@@ -1,0 +1,133 @@
+#Make initial Control Socket with jumpbox
+  ssh -MS /tmp/jump student@10.50.26.72
+     (-MS specify socket)   (/tmp/jump socket location)
+  ssh -S /tmp/jump jump 
+     (This makes it so you only have to log into the jumpbox once)
+  ip a 
+#Create dynamic port forward to jumpbox
+  ssh -S /tmp/jump jump -O forward -D9050
+  ss -ntlp
+#Target IP 192.168.65.20
+  proxychains nmap -Pn -T4 -vvvv 192.168.65.20
+#Ports open: 80, 2222
+  proxychains nc 192.168.65.20 80
+#Create static port forwards to 80 and 2222 on 192.168.65.20
+  ssh -S /tmp/jump jump -O forward -L 1111:192.168.65.20:80 -L 2222:192.168.65.20:2222
+#Test to see if ports are open through the loopback ip 
+  nc 127.0.0.1 1111
+  hi
+  nc 127.0.0.1 2222
+  hi
+#For cancelling port forwards (Don't do this unless needed)
+  ssh -S /tmp/jump jump -O cancel -L 1111:192.168.65.20:80 -L 2222:192.168.65.20:2222
+  
+#Interact through browser
+  firefox
+  url: 127.0.0.1:1111
+#Create control socket to web server
+  ssh -MS /tmp/web <creds>@127.0.0.1 -p 2222
+////////////////////////////////////////////////////////////////////////////////////////
+Slides
+
+Penetration Testing
+  Phase 1 - Mission Defintion
+  Phase 2 - Recon
+  Phase 3 - Footprinting
+  Phase 4 - Exploitation & Initial Access
+  Phase 5 - Post-Exploitation
+  Phase 6 - Document Mission
+  
+OP Notes are extremely important in the fleet
+
+
+Scanning and Reconnaissance
+  Intelligence collects information
+  Scraping Data
+    Prep 
+        pip instsll lxml requests
+    Scraping Script
+      vim scraper.py
+      
+        #!/usr/bin/python
+	import lxml.html
+	import requests
+
+	page = requests.get('http://quotes.toscrape.com')
+	tree = lxml.html.fromstring(page.content)
+	
+	authors = tree.xpath('//small[@class="author"]/text()')
+
+	print ('Authors: ',authors)
+	
+      chmod 755 scraper.py
+      
+      Output:
+        Authors:  ['Albert Einstein', 'J.K. Rowling', 'Albert Einstein', 'Jane Austen', 'Marilyn Monroe', 'Albert Einstein', u’Andr\xe9 Gide', 'Thomas A. Edison', 'Eleanor Roosevelt', 'Steve Martin']
+    For seeing nmap scripts
+        ls -la /usr/share/nmap/scripts/
+        ls -la /usr/share/nmap/scripts/ | grep http
+     ss -ntlp
+     proxychains nmap -Pn -T4 -vvvv --script=http-enum 192.168.65.20 -p80
+     
+     
+Vulnerability and Exploitation Research
+/////////////////////////////////////////////////////////////////////////////////////////////
+CTFs
+
+Asa Exploit 
+  CVE-2018-0101
+  NIST score: 10.0 Critical
+  Vulnerability: Remote Code
+PoF (Proof of concept)
+  crash 
+    id:43986
+PrintConfig.dll exploit
+  Windows ALPC Elevation of Privilege Vulnerability
+  CVE-2018-8440
+  Author: SandboxEscaper
+  Method: SchRpcSetSecurity
+  
+  
+  
+  
+  
+  
+Reconnaissance
+  Scheme of Maneuver:
+    >Jump Box
+    ->Network scan: 192.168.28.96/27
+    -->Network scan:192.168.150.224/27
+  (Ping sweep command) 
+    for i in {1..254} ;do (ping -c 1 192.168.28.$i | grep "bytes from" &) ;done
+  
+  OP Notes:
+  1st Terminal
+  ssh -MS /tmp/jump student@10.50.29.89  (connection to jump box)
+  2nd Terminal
+  ssh -S /tmp/jump jim
+  3rd Terminal
+  ssh -S /tmp/jump jim -O forward -D9050
+  4th Terminal
+  proxychains nmap 192.168.28.129 -vvvv -T4 -Pn -p 1-9999 (Do this for all found IPs)
+  proxychains wget -r ftp://192.168.28.105
+  (Find flag in file transmitted to you)
+  ssh -S /tmp/jump jim -O forward -L 1234:192.168.28.111:80 -L 4321:127.0.0.1:8080
+  ssh -S /tmp/jump jim -O cancel -L 1234:192.168.28.111:80 -L 4321:127.0.0.1:8080
+  ssh -S /tmp/jump jim -O forward -L 1222:192.168.28.111:80 -L 4333:127.0.0.1:2222
+  ssh -S /tmp/jump jim -O cancel -L 1222:192.168.28.111:80 -L 4333:127.0.0.1:2222
+
+  proxychains nc 192.168.28.120 4242
+  cat ServerInitialization
+  YourTempPassword
+  proxychains ssh 192.168.28.120 -p 4242
+  for i in {1..254} ;do (ping -c 1 192.168.150.$i | grep "bytes from" &) ;done
+  
+  ssh -S /tmp/jump jim -O cancel -D9050
+  ssh -S /tmp/jump jim -O forward -L 4343:192.168.28.120:4242
+  ssh -MS /tmp/grey student@127.0.0.1 -p 4343
+  ssh -S /tmp/grey grey -O forward -D9050
+  proxychains nmap -Pn -T4 -vvvv --script=smb-os-discovery 192.168.150.245 -p445
+
+/usr/share/nmap/scripts
+
+smb-os-discovery
